@@ -3,10 +3,14 @@
 // @namespace    http://fortunabmc.com/
 // @version      0.1.0
 // @description  Colorize the header backgrounds of ReTool Workflow Blocks
+// @copyright    2024, khill-fbmc (https://openuserjs.org/users/khill-fbmc)
 // @author       khill-fbmc
 // @license      MIT
 // @match        https://*.retool.com/workflows/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=retool.com
+// @homepageURL  https://github.com/khill-fbmc/retool-resource-colorizer/
+// @updateURL    https://openuserjs.org/meta/khill-fbmc/ReTool_Resource_Colorizer.meta.js
+// @downloadURL  https://openuserjs.org/install/khill-fbmc/ReTool_Resource_Colorizer.user.js
 // ==/UserScript==
 
 
