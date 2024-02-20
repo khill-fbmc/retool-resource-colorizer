@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTool Resource Colorizer
 // @namespace    http://fortunabmc.com/
-// @version      0.3.0
+// @version      0.3.1
 // @description  Colorize the header backgrounds of ReTool Workflow Blocks
 // @author       khill-fbmc
 // @license      MIT
@@ -86,11 +86,11 @@ function watchDOMForElements(selector) {
     });
 }
 
-const containsError = (text) => text.includes("error");
-const containsSuccess = (text) => text.includes("success");
-const containsRrcDirective = (text) => containsError(text) || containsSuccess(text);
-
 function processDivs() {
+    const containsError = text => /fail|error/i.test(text);
+    const containsSuccess = text => /pass|success/i.test(text);
+    const containsRrcDirective = text => containsError(text) || containsSuccess(text);
+
     const nodes = document.querySelectorAll('div[data-testid^="Workflows::BlockContainer::"]');
 
     log("Found", nodes.length, "Resource Blocks");
@@ -152,7 +152,7 @@ function createMenu() {
     return menu;
 }
 
-const addMenuToFooter = () => {
+function addMenuToFooter() {
     const menu = document.getElementById(MENU_ID);
     const views = document.querySelectorAll('div[data-testid="split-view-view"]');
     const footer = views[views.length - 1];
@@ -170,7 +170,7 @@ const addMenuToFooter = () => {
         footer.firstElementChild.style.justifyContent = 'flex-end';
         footer.firstElementChild.appendChild(menuButton);
     }
-};
+}
 
 //------------------------------------- MAIN ----------------------------------
 (function() {
