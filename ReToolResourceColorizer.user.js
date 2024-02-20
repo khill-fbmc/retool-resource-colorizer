@@ -1,16 +1,12 @@
 // ==UserScript==
 // @name         ReTool Resource Colorizer
 // @namespace    http://fortunabmc.com/
-// @version      0.2.0
+// @version      0.1.0
 // @description  Colorize the header backgrounds of ReTool Workflow Blocks
-// @copyright    2024, khill-fbmc (https://openuserjs.org/users/khill-fbmc)
 // @author       khill-fbmc
 // @license      MIT
 // @match        https://*.retool.com/workflows/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=retool.com
-// @homepageURL  https://github.com/khill-fbmc/retool-resource-colorizer/
-// @updateURL    https://openuserjs.org/meta/khill-fbmc/ReTool_Resource_Colorizer.meta.js
-// @downloadURL  https://openuserjs.org/install/khill-fbmc/ReTool_Resource_Colorizer.user.js
 // ==/UserScript==
 
 
@@ -90,117 +86,106 @@ function watchDOMForElements(selector) {
     });
 }
 
+const containsError = (text) => text.includes("error");
+const containsSuccess = (text) => text.includes("success");
+const containsRrcDirective = (text) => containsError(text) || containsSuccess(text);
+
+function processDivs() {
+    const nodes = document.querySelectorAll('div[data-testid^="Workflows::BlockContainer::"]');
+
+    log("Found", nodes.length, "Resource Blocks");
+
+    nodes.forEach(div => {
+        const extractedText = div.getAttribute('data-testid').split("::")[2];
+        //if (containsRrcDirective(extractedText)) {
+        //log(extractedText, "contains a directive");
+
+        const header = div.querySelector(".blockHeader");
+        if (header) {
+            let cssColor = '';
+            if (extractedText.includes("_$")) {
+                const colorName = extractedText.split("_$")[1];
+                if (isValidCSSColor(colorName)) {
+                    cssColor = colorName;
+                } else {
+                    log("-> Invalid CSS color name:", colorName);
+                }
+            } else {
+                const cssClass = containsError(extractedText) ? ERROR_CLASS : containsSuccess(extractedText) ? SUCCESS_CLASS : "";
+                if (cssClass) {
+                    header.classList.add(cssClass);
+                    log("Applied css class", cssClass, "to", extractedText);
+                }
+
+            }
+
+            if (cssColor) {
+                header.style.backgroundColor = cssColor;
+                log("Applied", cssColor, "to", extractedText);
+            }
+        }
+        //}
+    });
+}
+
+function createMenu() {
+    const menu = createElementWithText('ul', '');
+    menu.id = MENU_ID;
+    document.body.appendChild(menu);
+
+    // Define menu items with text and click handlers
+    const menuItems = [
+        {text: 'Menu Item 1', onClick: () => alert('Clicked Item 1')},
+        {text: 'Menu Item 2', onClick: () => alert('Clicked Item 2')},
+        // Add more items as needed
+    ];
+    log("Creating", menuItems.length, "Menu Items");
+    menuItems.forEach(itemConfig => {
+        const item = createElementWithText('li', itemConfig.text);
+        item.classList.add(MENU_ITEM_CLASS);
+        if (itemConfig.onClick) {
+            item.addEventListener('click', itemConfig.onClick);
+        }
+        menu.appendChild(item);
+    });
+
+    return menu;
+}
+
+const addMenuToFooter = () => {
+    const menu = document.getElementById(MENU_ID);
+    const views = document.querySelectorAll('div[data-testid="split-view-view"]');
+    const footer = views[views.length - 1];
+    if (footer) {
+        const menuButton = createElementWithText('span', 'RRC', {
+            marginRight: '10px',
+            marginLeft: 'auto',
+            color: 'var(--text-secondary)'
+        });
+        menuButton.id = MENU_BUTTON_ID;
+        menuButton.onclick = () => {
+            menu.style.display = menu.style.display !== 'block' ? 'block' : 'none';
+        };
+        footer.firstElementChild.style.display = 'flex';
+        footer.firstElementChild.style.justifyContent = 'flex-end';
+        footer.firstElementChild.appendChild(menuButton);
+    }
+};
+
 //------------------------------------- MAIN ----------------------------------
 (function() {
     'use strict';
 
-    const containsError = (text) => text.includes("error");
-    const containsSuccess = (text) => text.includes("success");
-    const containsRrcDirective = (text) => containsError(text) || containsSuccess(text);
-
-    const processDivs = () => {
-        const nodes = document.querySelectorAll('div[data-testid^="Workflows::BlockContainer::"]');
-
-        log("Found", nodes.length, "Resource Blocks");
-
-        nodes.forEach(div => {
-            const extractedText = div.getAttribute('data-testid').split("::")[2];
-            //if (containsRrcDirective(extractedText)) {
-                //log(extractedText, "contains a directive");
-
-                const header = div.querySelector(".blockHeader");
-                if (header) {
-                    let cssColor = '';
-                    if (extractedText.includes("_$")) {
-                        const colorName = extractedText.split("_$")[1];
-                        if (isValidCSSColor(colorName)) {
-                            cssColor = colorName;
-                        } else {
-                            log("-> Invalid CSS color name:", colorName);
-                        }
-                    } else {
-                        const cssClass = containsError(extractedText) ? ERROR_CLASS : containsSuccess(extractedText) ? SUCCESS_CLASS : "";
-                        if (cssClass) {
-                            header.classList.add(cssClass);
-                            log("Applied css class", cssClass, "to", extractedText);
-                        }
-
-                    }
-
-                    if (cssColor) {
-                        header.style.backgroundColor = cssColor;
-                        log("Applied", cssColor, "to", extractedText);
-                    }
-                }
-            //}
-        });
-    };
-
-    const createMenu = () => {
-        const menu = createElementWithText('ul', '');
-        menu.id = MENU_ID;
-        document.body.appendChild(menu);
-
-        // Define menu items with text and click handlers
-        const menuItems = [
-            {text: 'Menu Item 1', onClick: () => alert('Clicked Item 1')},
-            {text: 'Menu Item 2', onClick: () => alert('Clicked Item 2')},
-            // Add more items as needed
-        ];
-        log("Creating", menuItems.length, "Menu Items");
-        menuItems.forEach(itemConfig => {
-            const item = createElementWithText('li', itemConfig.text);
-            item.classList.add(MENU_ITEM_CLASS);
-            if (itemConfig.onClick) {
-                item.addEventListener('click', itemConfig.onClick);
-            }
-            menu.appendChild(item);
-        });
-
-        return menu;
-    };
-
-    const toggleMenuVisibility = () => {
-        const menu = document.getElementById(MENU_ID);
-        menu.style.display = menu.style.display !== 'block' ? 'block' : 'none';
-    };
-
-    const addMenuToFooter = () => {
-        const views = document.querySelectorAll('div[data-testid="split-view-view"]');
-        const footer = views[views.length - 1];
-        if (footer) {
-            const menuButton = createElementWithText('span', 'RRC', {
-                marginRight: '10px',
-                marginLeft: 'auto',
-                color: 'var(--text-secondary)'
-            });
-            menuButton.id = MENU_BUTTON_ID;
-            menuButton.onclick = toggleMenuVisibility;
-            footer.firstElementChild.style.display = 'flex';
-            footer.firstElementChild.style.justifyContent = 'flex-end';
-            footer.firstElementChild.appendChild(menuButton);
-        }
-    };
-
-
-    // Initialization
     console.log("Starting ReTool Response Colorizer [RRC]");
+
     addStyleToHead(CUSTOM_CSS);
     log("Added custom CSS to head");
-    const main = async () => {
-        await watchDOMForElements(`div[data-testid^="Workflows::BlockContainer::"]`);
+
+    watchDOMForElements(`div[data-testid^="Workflows::BlockContainer::"]`).then(() => {
         log("Adding Menu");
         createMenu()
         addMenuToFooter();
         log("Coloring Headers");
         processDivs();
-    };
-    main();
-    /*
-    setTimeout(() => {
-        console.log("ReTool Response Colorizer is GO!");
-        addMenuToFooter();
-        processDivs();
-    }, 5000);
-    */
+    });
 })();
