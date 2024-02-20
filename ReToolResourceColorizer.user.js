@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTool Resource Colorizer
 // @namespace    http://fortunabmc.com/
-// @version      0.1.0
+// @version      0.2.0
 // @description  Colorize the header backgrounds of ReTool Workflow Blocks
 // @copyright    2024, khill-fbmc (https://openuserjs.org/users/khill-fbmc)
 // @author       khill-fbmc
