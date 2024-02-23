@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTool Resource Colorizer
 // @namespace    http://fortunabmc.com/
-// @version      0.3.1
+// @version      0.4.0
 // @description  Colorize the header backgrounds of ReTool Workflow Blocks
 // @author       khill-fbmc
 // @license      MIT
@@ -9,7 +9,8 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=retool.com
 // ==/UserScript==
 
-
+const GITHUB_URL = "https://github.com/khill-fbmc/retool-resource-colorizer";
+const USERSCRIPT_URL = "https://openuserjs.org/scripts/khill-fbmc/ReTool_Resource_Colorizer";
 const ERROR_CLASS = 'rrc-error-block';
 const SUCCESS_CLASS = 'rrc-success-block';
 const MENU_ID = 'rrc-menu';
@@ -36,6 +37,10 @@ const CUSTOM_CSS = `
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }
 
+            #${MENU_BUTTON_ID}:hover {
+                cursor: pointer;
+            }
+
             .${MENU_ITEM_CLASS} {
                 padding: 5px;
                 margin-bottom: 5px; /* Space between items */
@@ -58,11 +63,21 @@ function isValidCSSColor(color) {
     return s.color !== '';
 }
 
+function applyStylesToElement(element, styles = {}) {
+    Object.assign(element.style, styles);
+    return element;
+}
+
 function createElementWithText(type, text, styles = {}) {
     const element = document.createElement(type);
     element.textContent = text;
-    Object.assign(element.style, styles);
-    return element;
+    return applyStylesToElement(element, styles);
+}
+
+function createElementWithHTML(type, html, styles = {}) {
+    const element = document.createElement(type);
+    element.innerHTML = html;
+    return applyStylesToElement(element, styles);
 }
 
 function addStyleToHead(styles) {
@@ -81,7 +96,6 @@ function watchDOMForElements(selector) {
                 resolve(elements);
             }
         });
-
         observer.observe(document.body, { subtree: true, childList: true });
     });
 }
@@ -129,24 +143,39 @@ function processDivs() {
 }
 
 function createMenu() {
-    const menu = createElementWithText('ul', '');
+    const menu = document.createElement('div');
     menu.id = MENU_ID;
     document.body.appendChild(menu);
 
+    // Add a menu heading
+    const menuHeading = createElementWithText('h5', 'ReTool Resource Colorizer', { padding: '10px', margin: '0', borderRadius: "5px", backgroundColor: 'aliceblue', textAlign: 'center' });
+    menu.appendChild(menuHeading);
+
+
+    const ul = document.createElement('ul');
+    menu.appendChild(ul);
+
     // Define menu items with text and click handlers
     const menuItems = [
-        {text: 'Menu Item 1', onClick: () => alert('Clicked Item 1')},
-        {text: 'Menu Item 2', onClick: () => alert('Clicked Item 2')},
-        // Add more items as needed
+        { text: 'Refresh Colors', onClick: () => processDivs() },
+        { text: 'GitHub Source', url: GITHUB_URL },
+        { text: 'Userscript Page', url: USERSCRIPT_URL },
     ];
+
     log("Creating", menuItems.length, "Menu Items");
     menuItems.forEach(itemConfig => {
-        const item = createElementWithText('li', itemConfig.text);
+        const li = document.createElement('li');
+        const item = createElementWithHTML('a', itemConfig.text, { display: 'block', padding: '5px 10px' });
         item.classList.add(MENU_ITEM_CLASS);
-        if (itemConfig.onClick) {
+
+        if (itemConfig.url) {
+            item.href = itemConfig.url;
+            item.target = "_blank"; // Open in new tab
+        } else if (itemConfig.onClick) {
             item.addEventListener('click', itemConfig.onClick);
         }
-        menu.appendChild(item);
+        li.appendChild(item);
+        ul.appendChild(li);
     });
 
     return menu;
@@ -173,7 +202,7 @@ function addMenuToFooter() {
 }
 
 //------------------------------------- MAIN ----------------------------------
-(function() {
+(function () {
     'use strict';
 
     console.log("Starting ReTool Response Colorizer [RRC]");
@@ -183,7 +212,7 @@ function addMenuToFooter() {
 
     watchDOMForElements(`div[data-testid^="Workflows::BlockContainer::"]`).then(() => {
         log("Adding Menu");
-        createMenu()
+        createMenu();
         addMenuToFooter();
         log("Coloring Headers");
         processDivs();
